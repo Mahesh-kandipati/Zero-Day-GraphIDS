@@ -58,7 +58,7 @@ python --version
 
 ### 2. Virtual Environment Setup
 ```powershell
-cd C:\522\0day\Zero-Day-GraphIDS
+cd C:\Zero-Day-GraphIDS
 python -m venv venv --system-site-packages
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\venv\Scripts\Activate.ps1
@@ -116,17 +116,9 @@ python manage.py test
 pytest
 ```
 
----
-
-## 👥 Four-Member Engineering Division
-
-- **Member 1 (Full-Stack & SOC Lead)**: Django core, RBAC, accounts, dashboard visualizations, responsive dark theme.
-- **Member 2 (Data Pipeline Lead)**: Dataset ingestion, file validation, schema detection, preprocessing, and data leakage prevention.
-- **Member 3 (GNN Specialist)**: Graph construction, GraphSAGE encoder, self-supervised InfoNCE/DGI, feature reconstruction.
-- **Member 4 (Cybersecurity & Evaluation Specialist)**: Mahalanobis anomaly scoring, threshold calibration, zero-day evaluation, baselines, and ReportLab PDF forensic engine.
-
----
-
 ## 📄 License & Disclaimer
 
 This software is developed strictly for defensive cybersecurity research, authorized intrusion detection, and educational evaluation.
+=======
+# Zero-Day-GraphIDS
+A self-supervised graph neural network (GNN) intrusion detection framework for detecting previously unseen, zero-day malicious network traffic without relying on attack labels. Built with PyTorch Geometric, GraphSAGE, and Django SOC Dashboard.
