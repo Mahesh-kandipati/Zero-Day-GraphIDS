@@ -15,7 +15,7 @@ Zero-Day GraphIDS is a production-ready, full-stack cybersecurity application de
 - **Leave-One-Attack-Family-Out Evaluation Protocol**: Empirically validates detection efficacy on completely withheld attack vectors and compares against Isolation Forest.
 - **Professional SOC Operations Center**: Responsive dark cybersecurity dashboard built with Bootstrap 5, Chart.js, and Cytoscape.js.
 - **Automated Forensic PDF Generation**: Multi-page PDF audit reports generated via ReportLab.
-- **CPU & Windows Optimized**: 100% CPU compatible with optional CUDA GPU acceleration.
+- **CPU & Windows Optimized**:100% CPU compatible with optional CUDA GPU acceleration.
 
 ---
 
