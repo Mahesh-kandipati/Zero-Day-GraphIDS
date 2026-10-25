@@ -1,0 +1,31 @@
+# Core Framework & Web
+Django>=4.2.0,<6.2.0
+asgiref>=3.7.0
+sqlparse>=0.4.4
+python-dotenv>=1.0.0
+
+# Deep Learning & Graph Neural Networks
+torch>=2.2.0
+torch-geometric>=2.5.0
+networkx>=3.2.1
+
+# Scientific Computing & Data Processing
+numpy>=1.26.0
+scipy>=1.12.0
+pandas>=2.1.0
+scikit-learn>=1.4.0
+
+# Visualization & Reporting
+plotly>=5.18.0
+reportlab>=4.0.0
+Pillow>=10.0.0
+
+# Testing & Quality Assurance
+pytest>=8.0.0
+pytest-django>=4.8.0
+
+# Optional Production & Async Support
+# psycopg2-binary>=2.9.9  # Uncomment for PostgreSQL
+# celery>=5.3.6          # Uncomment for Celery
+# redis>=5.0.1           # Uncomment for Redis
+# gunicorn>=21.2.0       # Uncomment for Linux production

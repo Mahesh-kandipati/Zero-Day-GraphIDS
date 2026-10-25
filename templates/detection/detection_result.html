@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Forensic Verdict // Scan #{{ upload.id }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a href="{% url 'detection:history' %}" class="text-info text-decoration-none">Scan Archive</a></li>
+                <li class="breadcrumb-item active text-light" aria-current="page">Scan #{{ upload.id }}</li>
+            </ol>
+        </nav>
+        <h3 class="text-light fw-bold mb-0">Forensic Anomaly Verdict: {{ upload.file_name }}</h3>
+    </div>
+    <div>
+        <a href="{% url 'reports:generate_detection' upload_id=upload.pk %}" class="btn btn-outline-danger btn-sm me-1">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Forensic PDF
+        </a>
+        <a href="{% url 'reports:export_csv' upload_id=upload.pk %}" class="btn btn-outline-success btn-sm me-1">
+            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
+        </a>
+        <a href="{% url 'reports:export_json' upload_id=upload.pk %}" class="btn btn-outline-info btn-sm">
+            <i class="bi bi-code-slash me-1"></i> JSON
+        </a>
+    </div>
+</div>
+
+<!-- Overall Verdict Alert Banner -->
+<div class="alert {% if upload.overall_verdict == 'ZERO_DAY_ALERT' %}badge-verdict-zero-day{% elif upload.overall_verdict == 'HIGH_RISK' %}badge-verdict-high-risk{% elif upload.overall_verdict == 'SUSPICIOUS' %}badge-verdict-suspicious{% else %}badge-verdict-benign{% endif %} p-4 mb-4 rounded shadow">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <span class="fs-4 fw-bold">
+                <i class="bi {% if upload.overall_verdict == 'ZERO_DAY_ALERT' %}bi-shield-slash-fill text-danger{% elif upload.overall_verdict == 'BENIGN' %}bi-shield-check text-success{% else %}bi-shield-exclamation text-warning{% endif %} me-2"></i>
+                {{ upload.get_overall_verdict_display }}
+            </span>
+            <div class="small mt-1 opacity-75">
+                Model: <b>{{ upload.model_used.name }}</b> |
+                Detection Latency: <b>{{ upload.latency_ms }} ms</b> |
+                Inspected Flows: <b>{{ upload.total_chunks }} chunks</b>
+            </div>
+        </div>
+        <div class="text-end">
+            <div class="fs-2 fw-bold">{{ upload.malicious_chunks }} / {{ upload.total_chunks }}</div>
+            <div class="small opacity-75">Anomalous Chunks Flagged</div>
+        </div>
+    </div>
+</div>
+
+<!-- Metrics Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-md-3">
+        <div class="card p-3 metric-card">
+            <div class="text-muted small">Total Graph Chunks</div>
+            <div class="metric-value text-info">{{ upload.total_chunks }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="card p-3 metric-card emerald">
+            <div class="text-muted small">Normal Baseline Chunks</div>
+            <div class="metric-value text-success">{{ upload.normal_chunks }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="card p-3 metric-card rose">
+            <div class="text-muted small">Malicious Chunks</div>
+            <div class="metric-value text-danger">{{ upload.malicious_chunks }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="card p-3 metric-card amber">
+            <div class="text-muted small">Average / Threshold</div>
+            <div class="metric-value text-warning fs-4 mt-1">{{ upload.avg_anomaly_score }} / {{ upload.threshold_used }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Anomaly Score vs Threshold Chart -->
+<div class="card p-3 shadow mb-4">
+    <h5 class="card-title text-light mb-3">
+        <i class="bi bi-activity text-info me-2"></i>Chunk Anomaly Scores vs Adaptive Decision Threshold
+    </h5>
+    <div style="height: 300px;">
+        <canvas id="scoresChart"></canvas>
+    </div>
+</div>
+
+<!-- SOC Incident Alerts (if triggered) -->
+{% if alerts %}
+<div class="card shadow mb-4 border-danger">
+    <div class="card-header bg-danger bg-opacity-25 text-danger fw-bold">
+        <i class="bi bi-bell-fill me-2"></i>Triggered Security Incident Alerts ({{ alerts.count }})
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark table-sm table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Severity</th>
+                        <th>Alert Description</th>
+                        <th>Status</th>
+                        <th>Detected At</th>
+                        <th class="text-end">Triage Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in alerts %}
+                    <tr>
+                        <td>
+                            <span class="badge {% if a.severity == 'CRITICAL' %}bg-danger{% elif a.severity == 'HIGH' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                {{ a.get_severity_display }}
+                            </span>
+                        </td>
+                        <td class="fw-bold">{{ a.title }}</td>
+                        <td><span class="badge bg-secondary">{{ a.get_status_display }}</span></td>
+                        <td>{{ a.created_at|date:"H:i:s" }}</td>
+                        <td class="text-end">
+                            <form method="post" action="{% url 'detection:alert_update' pk=a.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="RESOLVED">
+                                <button type="submit" class="btn btn-sm btn-outline-success py-0" title="Resolve Alert">
+                                    <i class="bi bi-check"></i>
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'detection:alert_update' pk=a.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="FALSE_POSITIVE">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary py-0" title="Mark False Positive">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Chunk-by-Chunk Results Table -->
+<div class="card shadow mb-4">
+    <div class="card-header text-light">
+        <i class="bi bi-diagram-3 text-info me-2"></i>Inspected Graph Chunk Results
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive" style="max-height: 400px;">
+            <table class="table table-dark table-sm table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Chunk #</th>
+                        <th>Flow Range</th>
+                        <th>Anomaly Score</th>
+                        <th>Threshold</th>
+                        <th>Classification Verdict</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in results %}
+                    <tr>
+                        <td class="fw-bold">#{{ r.chunk_id }}</td>
+                        <td>{{ r.start_idx }} - {{ r.end_idx }} ({{ r.flow_count }} flows)</td>
+                        <td class="{% if r.is_malicious %}text-danger fw-bold{% else %}text-success{% endif %}">
+                            {{ r.anomaly_score }}
+                        </td>
+                        <td>{{ r.threshold }}</td>
+                        <td>
+                            <span class="badge {% if r.attack_type == 'ZERO_DAY_ANOMALY' %}bg-danger{% elif r.attack_type == 'HIGH_RISK_INTRUSION' %}bg-warning text-dark{% elif r.attack_type == 'SUSPICIOUS_PROBE' %}bg-info text-dark{% else %}bg-success{% endif %}">
+                                {{ r.get_attack_type_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const chunkIds = {{ chunk_ids_json|safe }};
+    const scores = {{ scores_json|safe }};
+    const thresholds = {{ thresholds_json|safe }};
+
+    if (chunkIds && chunkIds.length > 0) {
+        const ctx = document.getElementById('scoresChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chunkIds.map(c => 'Chunk ' + c),
+                datasets: [
+                    {
+                        label: 'Mahalanobis Anomaly Score',
+                        data: scores,
+                        backgroundColor: scores.map((s, idx) => s > thresholds[idx] ? 'rgba(244, 63, 94, 0.7)' : 'rgba(16, 185, 129, 0.6)'),
+                        borderColor: scores.map((s, idx) => s > thresholds[idx] ? '#f43f5e' : '#10b981'),
+                        borderWidth: 1
+                    },
+                    {
+                        type: 'line',
+                        label: 'Calibrated Decision Threshold',
+                        data: thresholds,
+                        borderColor: '#fbbf24',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
+                    y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
+                },
+                plugins: {
+                    legend: { labels: { color: '#f8fafc' } }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

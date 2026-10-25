@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}SOC Incident Alerts // Zero-Day GraphIDS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="text-light fw-bold mb-1">
+            <i class="bi bi-bell-fill text-danger me-2"></i>Security Incident Alerts
+        </h3>
+        <p class="text-muted small mb-0">SOC triage dashboard for anomalous topological flow patterns and zero-day alerts</p>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card p-3 mb-4 shadow">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-auto">
+            <label class="text-muted small me-2">Severity:</label>
+            <select name="severity" class="form-select form-select-sm bg-dark text-light border-secondary d-inline-block w-auto">
+                <option value="">All Severities</option>
+                <option value="CRITICAL" {% if severity_filter == 'CRITICAL' %}selected{% endif %}>Critical Zero-Day</option>
+                <option value="HIGH" {% if severity_filter == 'HIGH' %}selected{% endif %}>High Severity</option>
+                <option value="MEDIUM" {% if severity_filter == 'MEDIUM' %}selected{% endif %}>Medium Severity</option>
+                <option value="LOW" {% if severity_filter == 'LOW' %}selected{% endif %}>Low Severity</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <label class="text-muted small me-2">Status:</label>
+            <select name="status" class="form-select form-select-sm bg-dark text-light border-secondary d-inline-block w-auto">
+                <option value="">All Statuses</option>
+                <option value="NEW" {% if status_filter == 'NEW' %}selected{% endif %}>New</option>
+                <option value="IN_REVIEW" {% if status_filter == 'IN_REVIEW' %}selected{% endif %}>Under Review</option>
+                <option value="RESOLVED" {% if status_filter == 'RESOLVED' %}selected{% endif %}>Resolved</option>
+                <option value="FALSE_POSITIVE" {% if status_filter == 'FALSE_POSITIVE' %}selected{% endif %}>False Positive</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-sm btn-info text-dark fw-bold">Apply Filter</button>
+            <a href="{% url 'detection:alerts' %}" class="btn btn-sm btn-outline-secondary">Reset</a>
+        </div>
+    </form>
+</div>
+
+<div class="card shadow">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Alert ID</th>
+                        <th>Severity</th>
+                        <th>Alert Description</th>
+                        <th>Origin Scan</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                        <th class="text-end">Triage Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in alerts %}
+                    <tr>
+                        <td class="text-muted">#{{ a.id }}</td>
+                        <td>
+                            <span class="badge {% if a.severity == 'CRITICAL' %}bg-danger{% elif a.severity == 'HIGH' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                {{ a.get_severity_display }}
+                            </span>
+                        </td>
+                        <td class="fw-bold">{{ a.title }}</td>
+                        <td>
+                            <a href="{% url 'detection:result' pk=a.upload.pk %}" class="text-info text-decoration-none">
+                                {{ a.upload.file_name }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge {% if a.status == 'NEW' %}bg-danger{% elif a.status == 'RESOLVED' %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ a.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ a.created_at|date:"M d, H:i" }}</td>
+                        <td class="text-end">
+                            <form method="post" action="{% url 'detection:alert_update' pk=a.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="IN_REVIEW">
+                                <button type="submit" class="btn btn-sm btn-outline-warning py-0" title="Investigate">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'detection:alert_update' pk=a.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="RESOLVED">
+                                <button type="submit" class="btn btn-sm btn-outline-success py-0" title="Resolve">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-check2-circle text-success fs-2 d-block mb-2"></i>
+                            All systems normal. No active intrusion alerts matching current criteria.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

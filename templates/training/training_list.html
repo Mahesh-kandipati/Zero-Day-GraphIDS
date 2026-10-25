@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}GNN Training Runs // Zero-Day GraphIDS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="text-light fw-bold mb-1">
+            <i class="bi bi-cpu-fill text-primary me-2"></i>Self-Supervised GNN Training
+        </h3>
+        <p class="text-muted small mb-0">GraphSAGE / GCN representation learning runs and leave-one-attack-family-out evaluations</p>
+    </div>
+    <a href="{% url 'training:create' %}" class="btn btn-primary fw-bold">
+        <i class="bi bi-plus-circle-fill me-1"></i> New Training Job
+    </a>
+</div>
+
+<div class="card shadow">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Job ID</th>
+                        <th>Job Name</th>
+                        <th>Baseline Dataset</th>
+                        <th>Epochs</th>
+                        <th>Status</th>
+                        <th>Final Loss</th>
+                        <th>Zero-Day F1</th>
+                        <th>ROC-AUC</th>
+                        <th>Duration</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                    <tr>
+                        <td class="text-muted">#{{ job.id }}</td>
+                        <td class="fw-bold">
+                            <a href="{% url 'training:detail' pk=job.pk %}" class="text-info text-decoration-none">
+                                {{ job.name }}
+                            </a>
+                        </td>
+                        <td>{{ job.dataset.name }}</td>
+                        <td>{{ job.epochs }}</td>
+                        <td>
+                            {% if job.status == 'COMPLETED' %}
+                            <span class="badge bg-success">Completed</span>
+                            {% elif job.status == 'RUNNING' %}
+                            <span class="badge bg-primary">Running...</span>
+                            {% elif job.status == 'FAILED' %}
+                            <span class="badge bg-danger">Failed</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Queued</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ job.final_loss|default:"N/A" }}</td>
+                        <td class="text-success fw-bold">{{ job.f1_score|default:"N/A" }}</td>
+                        <td class="text-info fw-bold">{{ job.roc_auc|default:"N/A" }}</td>
+                        <td>{{ job.training_duration_sec }}s</td>
+                        <td class="text-end">
+                            <a href="{% url 'training:detail' pk=job.pk %}" class="btn btn-sm btn-outline-info me-1" title="Telemetry">
+                                <i class="bi bi-speedometer2"></i>
+                            </a>
+                            <a href="{% url 'reports:generate_training' job_id=job.pk %}" class="btn btn-sm btn-outline-secondary" title="Audit PDF">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center py-5 text-muted">
+                            <i class="bi bi-cpu fs-2 d-block mb-2"></i>
+                            No GNN training runs executed yet. Click <b>"New Training Job"</b> to train a representation encoder.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

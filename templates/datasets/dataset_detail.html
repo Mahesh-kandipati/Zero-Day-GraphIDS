@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% load custom_tags %}
+
+{% block title %}Dataset Telemetry // {{ dataset.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a href="{% url 'datasets:list' %}" class="text-info text-decoration-none">Datasets</a></li>
+                <li class="breadcrumb-item active text-light" aria-current="page">{{ dataset.name }}</li>
+            </ol>
+        </nav>
+        <h3 class="text-light fw-bold mb-0">{{ dataset.name }}</h3>
+    </div>
+    <div>
+        <a href="{% url 'datasets:delete' pk=dataset.pk %}" class="btn btn-outline-danger btn-sm">
+            <i class="bi bi-trash me-1"></i> Delete Dataset
+        </a>
+    </div>
+</div>
+
+<!-- Telemetry Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-md-3">
+        <div class="card p-3 metric-card">
+            <div class="text-muted small">Total Flow Records</div>
+            <div class="metric-value text-info">{{ dataset.num_records }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="card p-3 metric-card emerald">
+            <div class="text-muted small">Numerical Features</div>
+            <div class="metric-value text-success">{{ dataset.num_features }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="card p-3 metric-card amber">
+            <div class="text-muted small">Dataset Schema</div>
+            <div class="metric-value text-warning fs-4 mt-1">{{ dataset.get_dataset_type_display }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="card p-3 metric-card rose">
+            <div class="text-muted small">Data Leakage Guard</div>
+            <div class="metric-value text-danger fs-4 mt-1">Verified (Strict)</div>
+        </div>
+    </div>
+</div>
+
+<!-- Class Distributions & Graph Configs -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card p-3 h-100 shadow">
+            <h5 class="card-title text-light mb-3">
+                <i class="bi bi-pie-chart-fill text-info me-2"></i>Traffic Class Distribution
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-dark table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Traffic Class Label</th>
+                            <th class="text-end">Flow Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for label, count in dataset.class_distribution.items %}
+                        <tr>
+                            <td>
+                                <span class="badge {% if label == 'BENIGN' or label == 'Normal' %}bg-success{% else %}bg-danger{% endif %} me-2">
+                                    {{ label }}
+                                </span>
+                            </td>
+                            <td class="text-end fw-bold">{{ count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card p-3 h-100 shadow">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title text-light mb-0">
+                    <i class="bi bi-diagram-3-fill text-info me-2"></i>Graph Configurations
+                </h5>
+                <button class="btn btn-sm btn-outline-info" data-bs-toggle="collapse" data-bs-target="#newConfigForm">
+                    <i class="bi bi-plus-lg me-1"></i> Add Config
+                </button>
+            </div>
+
+            <!-- Add Config Collapse -->
+            <div class="collapse mb-3" id="newConfigForm">
+                <form method="post" class="card card-body bg-dark border-secondary p-3">
+                    {% csrf_token %}
+                    {% for field in config_form %}
+                    <div class="mb-2">
+                        <label class="form-label text-light small">{{ field.label }}</label>
+                        {{ field }}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-info btn-sm text-dark fw-bold mt-2">Save Configuration</button>
+                </form>
+            </div>
+
+            <div class="list-group list-group-flush">
+                {% for c in configs %}
+                <div class="list-group-item bg-dark text-light border-secondary px-0">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="mb-1 text-info">{{ c.name }}</h6>
+                        <span class="badge bg-secondary">{{ c.get_graph_type_display }}</span>
+                    </div>
+                    <div class="text-muted small">
+                        Neighbors (k): <b class="text-light">{{ c.k_neighbors }}</b> |
+                        Chunk Window: <b class="text-light">{{ c.chunk_size }} flows</b> |
+                        Metric: <b class="text-light">{{ c.get_similarity_metric_display }}</b>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-muted small py-3">No custom graph configurations defined.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Raw Tabular Inspection -->
+{% if preview_rows %}
+<div class="card shadow mb-4">
+    <div class="card-header text-light">
+        <i class="bi bi-table text-info me-2"></i>Tabular Preview (First 5 Ingested Flows)
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive" style="max-height: 250px;">
+            <table class="table table-dark table-sm table-striped mb-0 text-nowrap">
+                <thead>
+                    <tr>
+                        {% for h in headers %}
+                        <th>{{ h }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in preview_rows %}
+                    <tr>
+                        {% for h in headers %}
+                        <td>{{ row|get_item:h|default:row.h }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="d-flex justify-content-start">
+    <a href="{% url 'datasets:list' %}" class="btn btn-outline-secondary me-2">Back to Datasets</a>
+    <a href="{% url 'training:create' %}" class="btn btn-primary">
+        <i class="bi bi-play-circle-fill me-1"></i> Proceed to GNN Training
+    </a>
+</div>
+{% endblock %}

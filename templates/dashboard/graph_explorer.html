@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Network Topology Explorer // Zero-Day GraphIDS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="text-light fw-bold mb-1">
+            <i class="bi bi-diagram-3-fill text-success me-2"></i>Network Topology Explorer
+        </h3>
+        <p class="text-muted small mb-0">Interactive graph visualization of k-Nearest Neighbors metric similarity across network flow chunks</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card p-3 shadow">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title text-light mb-0">
+                    <i class="bi bi-share text-success me-2"></i>Graph Topology Rendering (Cytoscape.js)
+                </h5>
+                <button class="btn btn-sm btn-outline-secondary" onclick="cy.layout({ name: 'cose', animate: true }).run();">
+                    <i class="bi bi-arrow-repeat me-1"></i> Re-layout
+                </button>
+            </div>
+            <div id="cy" style="height: 500px; width: 100%; background-color: #030712; border-radius: 0.375rem; border: 1px solid #1e293b;"></div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card p-3 shadow h-100">
+            <h5 class="card-title text-light mb-3">
+                <i class="bi bi-bar-chart text-info me-2"></i>Graph Topological Metrics
+            </h5>
+            <ul class="list-group list-group-flush bg-dark">
+                <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between px-0">
+                    <span class="text-muted">Total Active Nodes</span>
+                    <span class="fw-bold text-info">{{ stats.total_nodes }}</span>
+                </li>
+                <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between px-0">
+                    <span class="text-muted">Total Similarity Edges</span>
+                    <span class="fw-bold text-success">{{ stats.total_edges }}</span>
+                </li>
+                <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between px-0">
+                    <span class="text-muted">Network Density</span>
+                    <span class="fw-bold text-warning">{{ stats.density }}</span>
+                </li>
+                <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between px-0">
+                    <span class="text-muted">Average Node Degree</span>
+                    <span class="fw-bold">{{ stats.avg_degree }}</span>
+                </li>
+                <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between px-0">
+                    <span class="text-muted">Average Clustering Coeff</span>
+                    <span class="fw-bold">{{ stats.avg_clustering }}</span>
+                </li>
+            </ul>
+
+            <div class="mt-4 p-3 border border-secondary rounded bg-dark">
+                <h6 class="text-light mb-2"><i class="bi bi-info-circle text-info me-2"></i>Topology Semantics</h6>
+                <p class="text-muted small mb-0">
+                    Nodes denote flow vectors within the temporal window. Edges represent metric proximity exceeding similarity thresholds. Dense clusters indicate uniform benign communications; isolated or highly irregular hubs indicate port scanning, DDoS bursts, or stealth exfiltration.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const elementsData = {{ graph_json|safe }};
+    let cy;
+
+    if (elementsData && elementsData.length > 0) {
+        cy = cytoscape({
+            container: document.getElementById('cy'),
+            elements: elementsData,
+            style: [
+                {
+                    selector: 'node',
+                    style: {
+                        'background-color': '#06b6d4',
+                        'label': 'data(id)',
+                        'color': '#f8fafc',
+                        'font-size': '10px',
+                        'width': 'mapData(degree, 0, 10, 15, 35)',
+                        'height': 'mapData(degree, 0, 10, 15, 35)',
+                        'text-valign': 'center',
+                        'text-outline-width': 1,
+                        'text-outline-color': '#0b0f19'
+                    }
+                },
+                {
+                    selector: 'edge',
+                    style: {
+                        'width': 1.5,
+                        'line-color': '#334155',
+                        'curve-style': 'bezier',
+                        'opacity': 0.7
+                    }
+                }
+            ],
+            layout: {
+                name: 'cose',
+                animate: false,
+                padding: 30
+            }
+        });
+    }
+</script>
+{% endblock %}

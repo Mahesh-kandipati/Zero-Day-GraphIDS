@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}System Status & Environment // Zero-Day GraphIDS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="text-light fw-bold mb-1">
+            <i class="bi bi-activity text-info me-2"></i>Platform Health & Runtime Environment
+        </h3>
+        <p class="text-muted small mb-0">Hardware diagnostics, PyTorch execution backend, and database verification</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card p-4 shadow h-100">
+            <h5 class="text-light mb-3">
+                <i class="bi bi-cpu text-primary me-2"></i>Runtime Dependencies
+            </h5>
+            <table class="table table-dark table-sm mb-0">
+                <tbody>
+                    <tr>
+                        <td class="text-muted">Python Version</td>
+                        <td class="fw-bold text-info">{{ status_info.python_version }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Host Platform</td>
+                        <td class="fw-bold">{{ status_info.platform }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">PyTorch Backend</td>
+                        <td class="fw-bold text-success">{{ status_info.torch_version }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Execution Device</td>
+                        <td class="fw-bold text-warning">{{ status_info.device }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">CUDA Available</td>
+                        <td>
+                            {% if status_info.cuda_available %}
+                            <span class="badge bg-success">Yes</span>
+                            {% else %}
+                            <span class="badge bg-secondary">No (CPU Mode Active)</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card p-4 shadow h-100">
+            <h5 class="text-light mb-3">
+                <i class="bi bi-shield-check text-success me-2"></i>Security Safeguards
+            </h5>
+            <ul class="list-group list-group-flush bg-dark">
+                <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between px-0">
+                    <span class="text-muted">Data Leakage Guard</span>
+                    <span class="badge bg-success">Active</span>
+                </li>
+                <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between px-0">
+                    <span class="text-muted">Self-Supervised Label Omission</span>
+                    <span class="badge bg-success">Enforced</span>
+                </li>
+                <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between px-0">
+                    <span class="text-muted">Validation-Only Threshold Calibration</span>
+                    <span class="badge bg-success">Enforced</span>
+                </li>
+                <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between px-0">
+                    <span class="text-muted">Upload File Size Restriction</span>
+                    <span class="badge bg-info text-dark">100 MB Limit</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

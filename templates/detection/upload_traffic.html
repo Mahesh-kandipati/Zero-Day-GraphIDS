@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Inspect Network Traffic // Zero-Day GraphIDS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card p-4 shadow">
+            <h4 class="card-title text-light mb-2">
+                <i class="bi bi-radar text-warning me-2"></i>Inspect Network Traffic Flows
+            </h4>
+            <p class="text-muted small mb-4">
+                Submit raw, uninspected flow CSV records for zero-day anomaly classification.
+                The detection engine maps flows into dynamic graph chunks, passes them through the trained
+                GNN encoder, and scores deviations against baseline reference representations.
+            </p>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label text-light small fw-bold">Select Trained GNN Model</label>
+                    <select name="model_used" class="form-select bg-dark text-light border-secondary" required>
+                        {% for m in models_available %}
+                        <option value="{{ m.pk }}">{{ m.name }} (Dataset: {{ m.dataset.name }}, F1: {{ m.f1_score|default:'N/A' }})</option>
+                        {% empty %}
+                        <option value="">No trained models available. Please train a model first.</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-light small fw-bold">Uninspected Traffic Flow CSV</label>
+                    <input type="file" name="file" class="form-control bg-dark text-light border-secondary" accept=".csv" required>
+                    <div class="form-text text-muted" style="font-size: 0.75rem;">
+                        Accepts standard flow records (e.g. CICFlowMeter output, NetFlow CSV).
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'detection:history' %}" class="btn btn-outline-secondary">Scan Archive</a>
+                    <button type="submit" class="btn btn-warning text-dark fw-bold">
+                        <i class="bi bi-shield-shaded me-1"></i> Launch Zero-Day Inspection
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

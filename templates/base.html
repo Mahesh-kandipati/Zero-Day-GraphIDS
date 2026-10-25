@@ -1,0 +1,135 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Zero-Day GraphIDS // Self-Supervised Detection{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Custom SOC CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <!-- Chart.js & Cytoscape.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+</head>
+<body>
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            {% if user.is_authenticated %}
+            <!-- Left SOC Navigation Sidebar -->
+            <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 sidebar d-flex flex-column justify-content-between">
+                <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-3">
+                    <a href="{% url 'dashboard:index' %}" class="d-flex align-items-center pb-3 mb-md-1 text-decoration-none border-bottom border-secondary w-100">
+                        <i class="bi bi-shield-lock-fill text-info fs-3 me-2"></i>
+                        <span class="fs-5 sidebar-brand d-none d-sm-inline">Zero-Day GraphIDS</span>
+                    </a>
+
+                    <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start w-100 mt-3" id="menu">
+                        <li class="nav-item w-100">
+                            <a href="{% url 'dashboard:index' %}" class="nav-link align-middle px-0">
+                                <i class="bi bi-speedometer2 text-info fs-5 me-2"></i> <span class="d-none d-sm-inline">SOC Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item w-100">
+                            <a href="{% url 'datasets:list' %}" class="nav-link align-middle px-0">
+                                <i class="bi bi-database-fill-gear text-secondary fs-5 me-2"></i> <span class="d-none d-sm-inline">Datasets & Graphs</span>
+                            </a>
+                        </li>
+                        <li class="nav-item w-100">
+                            <a href="{% url 'training:list' %}" class="nav-link align-middle px-0">
+                                <i class="bi bi-cpu-fill text-primary fs-5 me-2"></i> <span class="d-none d-sm-inline">GNN Training</span>
+                            </a>
+                        </li>
+                        <li class="nav-item w-100">
+                            <a href="{% url 'detection:upload' %}" class="nav-link align-middle px-0">
+                                <i class="bi bi-radar text-warning fs-5 me-2"></i> <span class="d-none d-sm-inline">Scan Traffic</span>
+                            </a>
+                        </li>
+                        <li class="nav-item w-100">
+                            <a href="{% url 'detection:alerts' %}" class="nav-link align-middle px-0">
+                                <i class="bi bi-bell-fill text-danger fs-5 me-2"></i> <span class="d-none d-sm-inline">Incident Alerts</span>
+                            </a>
+                        </li>
+                        <li class="nav-item w-100">
+                            <a href="{% url 'detection:history' %}" class="nav-link align-middle px-0">
+                                <i class="bi bi-clock-history text-secondary fs-5 me-2"></i> <span class="d-none d-sm-inline">Scan Archive</span>
+                            </a>
+                        </li>
+                        <li class="nav-item w-100">
+                            <a href="{% url 'dashboard:embeddings' %}" class="nav-link align-middle px-0">
+                                <i class="bi bi-bounding-box-circles text-info fs-5 me-2"></i> <span class="d-none d-sm-inline">2D Embeddings</span>
+                            </a>
+                        </li>
+                        <li class="nav-item w-100">
+                            <a href="{% url 'dashboard:graph_explorer' %}" class="nav-link align-middle px-0">
+                                <i class="bi bi-diagram-3-fill text-success fs-5 me-2"></i> <span class="d-none d-sm-inline">Topology Explorer</span>
+                            </a>
+                        </li>
+                        <li class="nav-item w-100">
+                            <a href="{% url 'reports:list' %}" class="nav-link align-middle px-0">
+                                <i class="bi bi-file-earmark-pdf-fill text-danger fs-5 me-2"></i> <span class="d-none d-sm-inline">Forensic Reports</span>
+                            </a>
+                        </li>
+                        <li class="nav-item w-100">
+                            <a href="{% url 'dashboard:system_status' %}" class="nav-link align-middle px-0">
+                                <i class="bi bi-activity text-info fs-5 me-2"></i> <span class="d-none d-sm-inline">System Status</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- User Footer Profile Box -->
+                <div class="p-3 border-top border-secondary w-100">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-none d-sm-block">
+                            <div class="fw-bold text-light small">{{ user.username }}</div>
+                            <div class="text-muted small" style="font-size: 0.75rem;">{{ user.get_role_display }}</div>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-gear"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Security Profile</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">Sign Out</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Main Content Area -->
+            <div class="col py-3 px-4">
+                <!-- Top Notification Messages -->
+                {% if messages %}
+                <div class="mb-3">
+                    {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %} alert-dismissible fade show bg-dark border-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %} text-light" role="alert">
+                        <i class="bi {% if message.tags == 'error' %}bi-exclamation-triangle-fill text-danger{% elif message.tags == 'success' %}bi-check-circle-fill text-success{% else %}bi-info-circle-fill text-info{% endif %} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% block content %}
+                <!-- Child templates render here -->
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

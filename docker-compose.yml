@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: zeroday_graphids_web
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=django-insecure-docker-dev-key-change-in-prod-xyz
+      - ALLOWED_HOSTS=localhost,127.0.0.1,web
+      - USE_POSTGRES=False
+      - ML_DEVICE=cpu
+    restart: unless-stopped

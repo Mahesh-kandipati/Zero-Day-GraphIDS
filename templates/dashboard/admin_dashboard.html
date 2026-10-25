@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}SOC Command Center // Zero-Day GraphIDS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="text-light fw-bold mb-1">
+            <i class="bi bi-shield-lock-fill text-info me-2"></i>SOC Command & Telemetry Center
+        </h3>
+        <p class="text-muted small mb-0">Self-Supervised Graph Neural Network Intrusion Detection System</p>
+    </div>
+    <div>
+        <a href="{% url 'detection:upload' %}" class="btn btn-warning text-dark fw-bold me-2">
+            <i class="bi bi-radar me-1"></i> Scan Uninspected Traffic
+        </a>
+        <a href="{% url 'training:create' %}" class="btn btn-primary fw-bold">
+            <i class="bi bi-cpu me-1"></i> Train GNN
+        </a>
+    </div>
+</div>
+
+<!-- SOC High-Level Key Performance Indicators -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card p-3 metric-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small">Total Ingested Flows</div>
+                    <div class="metric-value text-info">{{ total_flows }}</div>
+                </div>
+                <i class="bi bi-diagram-2 text-info fs-1 opacity-50"></i>
+            </div>
+            <div class="small text-muted mt-2">{{ datasets_count }} active benchmark datasets</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card p-3 metric-card emerald">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small">Active GNN Models</div>
+                    <div class="metric-value text-success">{{ models_count }}</div>
+                </div>
+                <i class="bi bi-cpu text-success fs-1 opacity-50"></i>
+            </div>
+            <div class="small text-muted mt-2">Best F1: <b class="text-success">{{ best_job.f1_score|default:"--" }}</b></div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card p-3 metric-card amber">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small">Traffic Scans Run</div>
+                    <div class="metric-value text-warning">{{ scans_count }}</div>
+                </div>
+                <i class="bi bi-radar text-warning fs-1 opacity-50"></i>
+            </div>
+            <div class="small text-muted mt-2">Zero-day anomaly scoring</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card p-3 metric-card rose">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small">Open Critical Alerts</div>
+                    <div class="metric-value text-danger">{{ alert_metrics.critical }}</div>
+                </div>
+                <i class="bi bi-bell-fill text-danger fs-1 opacity-50"></i>
+            </div>
+            <div class="small text-muted mt-2">{{ alert_metrics.new_alerts }} new alerts awaiting triage</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-5">
+        <div class="card p-3 h-100 shadow">
+            <h5 class="card-title text-light mb-3">
+                <i class="bi bi-pie-chart text-info me-2"></i>Traffic Verdict Distributions
+            </h5>
+            <div style="height: 250px;">
+                <canvas id="verdictChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card p-3 h-100 shadow">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title text-light mb-0">
+                    <i class="bi bi-shield-shaded text-warning me-2"></i>Recent Traffic Scans
+                </h5>
+                <a href="{% url 'detection:history' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-dark table-sm table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Scan ID</th>
+                            <th>Traffic File</th>
+                            <th>Overall Verdict</th>
+                            <th>Anomalous Chunks</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in recent_scans %}
+                        <tr>
+                            <td>#{{ s.id }}</td>
+                            <td>
+                                <a href="{% url 'detection:result' pk=s.pk %}" class="text-info text-decoration-none fw-bold">
+                                    {{ s.file_name }}
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge {% if s.overall_verdict == 'ZERO_DAY_ALERT' %}badge-verdict-zero-day{% elif s.overall_verdict == 'HIGH_RISK' %}badge-verdict-high-risk{% elif s.overall_verdict == 'SUSPICIOUS' %}badge-verdict-suspicious{% else %}badge-verdict-benign{% endif %}">
+                                    {{ s.get_overall_verdict_display }}
+                                </span>
+                            </td>
+                            <td class="{% if s.malicious_chunks > 0 %}text-danger fw-bold{% else %}text-success{% endif %}">
+                                {{ s.malicious_chunks }} / {{ s.total_chunks }}
+                            </td>
+                            <td>{{ s.created_at|date:"H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No traffic scans completed yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Architecture & Pipeline Status Overview -->
+<div class="card shadow p-4 mb-4">
+    <h5 class="text-light mb-3">
+        <i class="bi bi-diagram-3-fill text-info me-2"></i>Zero-Day GraphIDS Computational Flow
+    </h5>
+    <div class="row text-center g-3">
+        <div class="col-6 col-md-2">
+            <div class="p-2 border border-secondary rounded bg-dark">
+                <i class="bi bi-cloud-arrow-up text-info fs-3"></i>
+                <div class="small fw-bold text-light mt-1">1. Ingestion</div>
+                <div class="text-muted" style="font-size: 0.7rem;">CSV Sanitation</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="p-2 border border-secondary rounded bg-dark">
+                <i class="bi bi-diagram-2 text-primary fs-3"></i>
+                <div class="small fw-bold text-light mt-1">2. k-NN Graph</div>
+                <div class="text-muted" style="font-size: 0.7rem;">Metric Topology</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="p-2 border border-secondary rounded bg-dark">
+                <i class="bi bi-cpu text-success fs-3"></i>
+                <div class="small fw-bold text-light mt-1">3. GraphSAGE</div>
+                <div class="text-muted" style="font-size: 0.7rem;">Self-Supervision</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="p-2 border border-secondary rounded bg-dark">
+                <i class="bi bi-bounding-box text-warning fs-3"></i>
+                <div class="small fw-bold text-light mt-1">4. Embeddings</div>
+                <div class="text-muted" style="font-size: 0.7rem;">Reference Profile</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="p-2 border border-secondary rounded bg-dark">
+                <i class="bi bi-speedometer text-danger fs-3"></i>
+                <div class="small fw-bold text-light mt-1">5. Mahalanobis</div>
+                <div class="text-muted" style="font-size: 0.7rem;">Score Calibration</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="p-2 border border-secondary rounded bg-dark">
+                <i class="bi bi-shield-check text-info fs-3"></i>
+                <div class="small fw-bold text-light mt-1">6. Zero-Day Verdict</div>
+                <div class="text-muted" style="font-size: 0.7rem;">Alerts & Forensic PDF</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const verdictData = {{ verdict_counts_json|safe }};
+    const ctx = document.getElementById('verdictChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(verdictData),
+            datasets: [{
+                data: Object.values(verdictData),
+                backgroundColor: ['#10b981', '#f59e0b', '#fb923c', '#f43f5e'],
+                borderColor: '#111827',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#f8fafc', padding: 15 } }
+            }
+        }
+    });
+</script>
+{% endblock %}

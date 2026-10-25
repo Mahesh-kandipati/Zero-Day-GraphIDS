@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Launch GNN Training // Zero-Day GraphIDS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card p-4 shadow">
+            <h4 class="card-title text-light mb-2">
+                <i class="bi bi-cpu-fill text-primary me-2"></i>Configure Self-Supervised Training
+            </h4>
+            <p class="text-muted small mb-4">
+                Trains GraphSAGE encoder exclusively on baseline normal flows via local-global contrastive InfoNCE
+                and masked feature reconstruction. Attack labels are strictly omitted during optimization.
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label text-light small fw-bold">Experiment Name</label>
+                    <input type="text" name="name" class="form-control bg-dark text-light border-secondary" value="GraphSAGE Zero-Day Run" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-light small fw-bold">Baseline Dataset</label>
+                    <select name="dataset" class="form-select bg-dark text-light border-secondary" required id="datasetSelect">
+                        {% for d in datasets %}
+                        <option value="{{ d.pk }}">{{ d.name }} ({{ d.num_records }} flows)</option>
+                        {% empty %}
+                        <option value="">No ready datasets available</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-light small fw-bold">Graph Configuration</label>
+                    <select name="graph_config" class="form-select bg-dark text-light border-secondary" required id="configSelect">
+                        {% for d in datasets %}
+                            {% for c in d.graph_configs.all %}
+                            <option value="{{ c.pk }}">{{ c.name }} [k={{ c.k_neighbors }}, chunk={{ c.chunk_size }}]</option>
+                            {% endfor %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label text-light small fw-bold">Epochs</label>
+                        <input type="number" name="epochs" class="form-control bg-dark text-light border-secondary" value="15" min="1" max="200">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label text-light small fw-bold">Learning Rate</label>
+                        <input type="number" step="0.001" name="learning_rate" class="form-control bg-dark text-light border-secondary" value="0.005">
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label text-light small fw-bold">Hidden Dimension</label>
+                        <input type="number" name="hidden_dim" class="form-control bg-dark text-light border-secondary" value="64">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label text-light small fw-bold">Embedding Dimension</label>
+                        <input type="number" name="embedding_dim" class="form-control bg-dark text-light border-secondary" value="32">
+                    </div>
+                </div>
+
+                <div class="form-check form-switch mb-4">
+                    <input class="form-check-input" type="checkbox" name="sync_mode" value="true" id="syncSwitch">
+                    <label class="form-check-label text-light small" for="syncSwitch">
+                        Synchronous execution (Wait and redirect upon completion)
+                    </label>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'training:list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary fw-bold">
+                        <i class="bi bi-play-fill me-1"></i> Start GNN Training Run
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

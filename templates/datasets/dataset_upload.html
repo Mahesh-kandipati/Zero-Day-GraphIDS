@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Ingest Network Dataset // Zero-Day GraphIDS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card p-4 shadow">
+            <h4 class="card-title text-light mb-2">
+                <i class="bi bi-cloud-arrow-up-fill text-info me-2"></i>Ingest Network Flow Dataset
+            </h4>
+            <p class="text-muted small mb-4">
+                Upload benchmark CSV files (CIC-IDS2017, CTU-13, USTC-TFC2016, or synthetic network traffic).
+                The engine sanitizes nulls/infinities, excludes leakage columns, and creates default graph configurations.
+            </p>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label text-light small fw-bold">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <div class="form-text text-muted" style="font-size: 0.75rem;">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% for error in field.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'datasets:list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-info text-dark fw-bold">
+                        <i class="bi bi-check2-circle me-1"></i> Ingest & Preprocess
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

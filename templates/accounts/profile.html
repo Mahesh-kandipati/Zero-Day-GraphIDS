@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}SOC Security Profile // Zero-Day GraphIDS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 col-lg-6 mx-auto">
+        <div class="card p-4 shadow">
+            <div class="d-flex align-items-center mb-3 pb-3 border-bottom border-secondary">
+                <i class="bi bi-person-badge-fill text-info fs-1 me-3"></i>
+                <div>
+                    <h4 class="text-light mb-0">{{ user_obj.username }}</h4>
+                    <span class="badge bg-secondary">{{ user_obj.get_role_display }}</span>
+                    <span class="text-muted ms-2 small">{{ user_obj.organization }}</span>
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label text-light small fw-bold">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'dashboard:index' %}" class="btn btn-outline-secondary">Return to Dashboard</a>
+                    <button type="submit" class="btn btn-info text-dark fw-bold">Update Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

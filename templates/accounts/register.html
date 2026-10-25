@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Provision Account // Zero-Day GraphIDS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-6 col-lg-5">
+        <div class="card p-4 shadow">
+            <h4 class="card-title text-light mb-3 text-center border-bottom border-secondary pb-2">
+                <i class="bi bi-person-plus text-info me-2"></i>Provision Analyst Account
+            </h4>
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label text-light small fw-bold">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <div class="form-text text-muted" style="font-size: 0.75rem;">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% for error in field.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-info text-dark fw-bold">
+                        <i class="bi bi-shield-check me-1"></i> Register Clearance
+                    </button>
+                </div>
+            </form>
+            <div class="text-center mt-3 border-top border-secondary pt-3">
+                <span class="text-muted small">Already authorized?</span>
+                <a href="{% url 'accounts:login' %}" class="text-info small text-decoration-none ms-1">Sign In</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

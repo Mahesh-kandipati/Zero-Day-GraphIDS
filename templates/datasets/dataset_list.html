@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Network Flow Datasets // Zero-Day GraphIDS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="text-light fw-bold mb-1">
+            <i class="bi bi-database-fill text-info me-2"></i>Network Traffic Datasets
+        </h3>
+        <p class="text-muted small mb-0">Preprocessed benchmark network flow repositories and graph configurations</p>
+    </div>
+    <a href="{% url 'datasets:upload' %}" class="btn btn-info text-dark fw-bold">
+        <i class="bi bi-cloud-arrow-up-fill me-1"></i> Ingest New Dataset
+    </a>
+</div>
+
+<div class="card shadow">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Dataset Name</th>
+                        <th>Format / Schema</th>
+                        <th>Total Flows</th>
+                        <th>Features</th>
+                        <th>Status</th>
+                        <th>Size</th>
+                        <th>Ingested Date</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in datasets %}
+                    <tr>
+                        <td class="fw-bold text-light">
+                            <a href="{% url 'datasets:detail' pk=d.pk %}" class="text-info text-decoration-none">
+                                {{ d.name }}
+                            </a>
+                        </td>
+                        <td><span class="badge bg-secondary">{{ d.get_dataset_type_display }}</span></td>
+                        <td>{{ d.num_records }}</td>
+                        <td>{{ d.num_features }}</td>
+                        <td>
+                            {% if d.status == 'READY' %}
+                            <span class="badge bg-success">Ready</span>
+                            {% elif d.status == 'PROCESSING' %}
+                            <span class="badge bg-warning text-dark">Processing</span>
+                            {% elif d.status == 'FAILED' %}
+                            <span class="badge bg-danger">Failed</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ d.file_size_kb }} KB</td>
+                        <td>{{ d.created_at|date:"M d, Y H:i" }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'datasets:detail' pk=d.pk %}" class="btn btn-sm btn-outline-info me-1" title="Inspect">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'datasets:delete' pk=d.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-folder2-open fs-2 d-block mb-2"></i>
+                            No network datasets ingested yet. Click <b>"Ingest New Dataset"</b> or run the sample data generator.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

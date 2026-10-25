@@ -1,0 +1,3 @@
+"""
+Detection app package.
+"""

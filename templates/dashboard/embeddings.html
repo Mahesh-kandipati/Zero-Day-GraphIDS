@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}2D Latent Embeddings Visualizer // Zero-Day GraphIDS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="text-light fw-bold mb-1">
+            <i class="bi bi-bounding-box-circles text-info me-2"></i>2D Graph Embedding Visualizer
+        </h3>
+        <p class="text-muted small mb-0">PCA projection of high-dimensional graph representations separating normal baseline from zero-day anomaly clusters</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card p-3 shadow">
+            <h5 class="card-title text-light mb-3">
+                <i class="bi bi-scatter text-info me-2"></i>Representation Space (Normal vs Zero-Day Anomaly)
+            </h5>
+            <div style="height: 450px;">
+                <canvas id="embeddingsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card p-3 shadow h-100">
+            <h5 class="card-title text-light mb-3">
+                <i class="bi bi-info-circle text-info me-2"></i>Mathematical Interpretation
+            </h5>
+            <p class="text-muted small">
+                The GraphSAGE encoder maps flow chunk topologies into a continuous manifold:
+            </p>
+            <div class="p-2 border border-secondary rounded bg-dark mb-3 text-info font-monospace small">
+                h_G = Concat( MeanPool(H), MaxPool(H) )
+            </div>
+            <p class="text-muted small">
+                <b>Normal Traffic:</b> Forms a dense, high-density cluster around the reference centroid vector &mu; in the self-supervised representation space.
+            </p>
+            <p class="text-muted small">
+                <b>Zero-Day Intrusions:</b> Deviate structurally and statistically into low-probability regions, producing elevated Mahalanobis distances without requiring prior attack signatures.
+            </p>
+
+            <div class="mt-auto border-top border-secondary pt-3">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="d-inline-block rounded-circle me-2" style="width: 12px; height: 12px; background-color: #06b6d4;"></span>
+                    <span class="small text-light">Normal Baseline Representations</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="d-inline-block rounded-circle me-2" style="width: 12px; height: 12px; background-color: #f43f5e;"></span>
+                    <span class="small text-light">Novel Zero-Day Anomalies</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const points = {{ points_json|safe }};
+    if (points && points.length > 0) {
+        const normalPoints = points.filter(p => p.label === 'Normal Baseline').map(p => ({ x: p.x, y: p.y }));
+        const anomPoints = points.filter(p => p.label === 'Zero-Day Anomaly').map(p => ({ x: p.x, y: p.y }));
+
+        const ctx = document.getElementById('embeddingsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    {
+                        label: 'Normal Baseline Chunks',
+                        data: normalPoints,
+                        backgroundColor: 'rgba(6, 182, 212, 0.7)',
+                        borderColor: '#06b6d4',
+                        pointRadius: 6
+                    },
+                    {
+                        label: 'Zero-Day Anomaly Chunks',
+                        data: anomPoints,
+                        backgroundColor: 'rgba(244, 63, 94, 0.85)',
+                        borderColor: '#f43f5e',
+                        pointRadius: 8,
+                        pointStyle: 'triangle'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        grid: { color: '#1e293b' },
+                        ticks: { color: '#94a3b8' },
+                        title: { display: true, text: 'Principal Component 1', color: '#94a3b8' }
+                    },
+                    y: {
+                        grid: { color: '#1e293b' },
+                        ticks: { color: '#94a3b8' },
+                        title: { display: true, text: 'Principal Component 2', color: '#94a3b8' }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#f8fafc' } }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

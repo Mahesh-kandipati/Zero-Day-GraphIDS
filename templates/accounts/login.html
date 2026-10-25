@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In // Zero-Day GraphIDS SOC{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-5 col-lg-4">
+        <div class="text-center mb-4">
+            <i class="bi bi-shield-lock-fill text-info" style="font-size: 3.5rem;"></i>
+            <h2 class="mt-2 fw-bold text-light">Zero-Day GraphIDS</h2>
+            <p class="text-muted small">Self-Supervised Graph Learning Intrusion Detection</p>
+        </div>
+
+        <div class="card p-4 shadow">
+            <h5 class="card-title text-light mb-3 text-center border-bottom border-secondary pb-2">SOC Portal Authentication</h5>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label text-light small fw-bold">Username</label>
+                    {{ form.username }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-light small fw-bold">Password</label>
+                    {{ form.password }}
+                </div>
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-info text-dark fw-bold">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Authenticate & Enter
+                    </button>
+                </div>
+            </form>
+            <div class="text-center mt-3 border-top border-secondary pt-3">
+                <span class="text-muted small">Need an operator clearance?</span>
+                <a href="{% url 'accounts:register' %}" class="text-info small text-decoration-none ms-1">Register Account</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
