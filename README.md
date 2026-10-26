@@ -1,7 +1,5 @@
 # Zero-Day GraphIDS
 
-> **A Self-Supervised Graph Learning Framework for Intelligent Zero-Day Malicious Traffic Detection**
-
 Zero-Day GraphIDS is a production-ready, full-stack cybersecurity application designed to detect novel, previously unseen zero-day network attacks without relying on labeled malicious training data. By converting network flow streams into $k$-Nearest Neighbors ($k$-NN) similarity graphs and training GraphSAGE encoders with self-supervised reconstruction and contrastive objectives, the system establishes a robust topological baseline of normal operations and scores deviations using regularized Mahalanobis distance.
 
 ---
